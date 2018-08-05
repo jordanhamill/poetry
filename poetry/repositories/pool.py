@@ -2,6 +2,7 @@ from typing import List
 from typing import Union
 
 import poetry.packages
+from poetry.config import Config
 
 from .base_repository import BaseRepository
 from .repository import Repository
@@ -48,11 +49,17 @@ class Pool(BaseRepository):
         from .legacy_repository import LegacyRepository
 
         if "url" in source:
+            url = source["url"]
+        elif "name" in source:
+            config = Config.create("config.toml")
+            url = config.setting("repositories.{}.url".format(source["name"]))
+
+        if url:
             # PyPI-like repository
             if "name" not in source:
                 raise RuntimeError("Missing [name] in source.")
 
-            repository = LegacyRepository(source["name"], source["url"])
+            repository = LegacyRepository(source["name"], url)
         else:
             raise RuntimeError("Unsupported source specified")
 
